@@ -9,7 +9,6 @@ from confluent_kafka import KafkaError, Message, Producer
 from app.config import Settings, get_settings
 from app.models.order_event import OrderEvent
 
-
 logger = logging.getLogger(__name__)
 
 

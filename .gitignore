@@ -14,3 +14,5 @@ htmlcov/
 
 data/
 logs/
+
+.DS_Store
