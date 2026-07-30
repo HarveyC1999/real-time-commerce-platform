@@ -1,0 +1,37 @@
+[project]
+name = "real-time-commerce-platform"
+version = "0.1.0"
+description = "A local real-time commerce event processing platform."
+requires-python = ">=3.12"
+dependencies = [
+    "confluent-kafka",
+    "pydantic>=2",
+    "pydantic-settings",
+    "psycopg[binary]",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "UP",
+]
