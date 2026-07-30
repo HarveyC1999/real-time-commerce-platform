@@ -1,0 +1,10 @@
+confluent-kafka
+pydantic>=2
+pydantic-settings
+psycopg[binary]
+python-dotenv
+
+[dev]
+pytest
+pytest-cov
+ruff
