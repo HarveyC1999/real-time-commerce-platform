@@ -2,7 +2,6 @@ pyproject.toml
 app/config.py
 app/models/order_event.py
 app/producers/order_producer.py
-app/scripts/produce_order.py
 real_time_commerce_platform.egg-info/PKG-INFO
 real_time_commerce_platform.egg-info/SOURCES.txt
 real_time_commerce_platform.egg-info/dependency_links.txt
