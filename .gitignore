@@ -12,6 +12,7 @@ htmlcov/
 .idea/
 .vscode/
 
+tests/
 data/
 logs/
 
