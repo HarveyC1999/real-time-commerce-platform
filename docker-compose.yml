@@ -44,6 +44,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./infrastructure/postgres/002_analytics.sql:/docker-entrypoint-initdb.d/002_analytics.sql
+      - ./infrastructure/postgres/003_remove_stream_batches.sql:/docker-entrypoint-initdb.d/003_remove_stream_batches.sql
     healthcheck:
       test:
         [
@@ -76,5 +78,130 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  spark-bronze:
+    image: apache/spark:4.1.3-scala2.13-java17-python3-ubuntu
+    container_name: commerce-spark-bronze
+
+    command:
+      - /opt/spark/bin/spark-submit
+      - --master
+      - local[2]
+      - --conf
+      - spark.jars.ivy=/tmp/.ivy2
+      - --packages
+      - org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.3
+      - /workspace/spark/jobs/bronze_orders.py
+
+    environment:
+      HOME: /tmp
+
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      KAFKA_ORDER_TOPIC: commerce.orders.v1
+
+      BRONZE_ORDER_EVENTS_PATH: >-
+        /workspace/lakehouse/bronze/order_events
+
+      BRONZE_CHECKPOINT_PATH: >-
+        /workspace/lakehouse/checkpoints/bronze_order_events
+
+    volumes:
+      - ./spark:/workspace/spark:ro
+      - ./lakehouse:/workspace/lakehouse
+      - spark_ivy_cache:/tmp/.ivy2
+
+    depends_on:
+      broker:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+  spark-silver:
+    image: apache/spark:4.1.3-scala2.13-java17-python3-ubuntu
+    container_name: commerce-spark-silver
+
+    command:
+      - /opt/spark/bin/spark-submit
+      - --master
+      - local[2]
+      - --conf
+      - spark.jars.ivy=/tmp/.ivy2
+      - /workspace/spark/jobs/silver_orders.py
+
+    environment:
+      HOME: /tmp
+
+      BRONZE_ORDER_EVENTS_PATH: >-
+        /workspace/lakehouse/bronze/order_events
+
+      SILVER_ORDER_EVENTS_PATH: >-
+        /workspace/lakehouse/silver/order_events
+
+      QUARANTINE_ORDER_EVENTS_PATH: >-
+        /workspace/lakehouse/quarantine/order_events
+
+      SILVER_CHECKPOINT_PATH: >-
+        /workspace/lakehouse/checkpoints/silver_order_events
+
+      QUARANTINE_CHECKPOINT_PATH: >-
+        /workspace/lakehouse/checkpoints/quarantine_order_events
+
+      SILVER_WATERMARK_DELAY: 7 days
+
+    volumes:
+      - ./spark:/workspace/spark:ro
+      - ./lakehouse:/workspace/lakehouse
+      - spark_ivy_cache:/tmp/.ivy2
+
+    depends_on:
+      spark-bronze:
+        condition: service_started
+
+    restart: unless-stopped
+
+  spark-gold:
+    image: apache/spark:4.1.3-scala2.13-java17-python3-ubuntu
+    container_name: commerce-spark-gold
+
+    command:
+      - /opt/spark/bin/spark-submit
+      - --master
+      - local[2]
+      - --conf
+      - spark.jars.ivy=/tmp/.ivy2
+      - /workspace/spark/jobs/gold_orders.py
+
+    environment:
+      HOME: /tmp
+
+      SILVER_ORDER_EVENTS_PATH: >-
+        /workspace/lakehouse/silver/order_events
+
+      GOLD_ORDER_METRICS_PATH: >-
+        /workspace/lakehouse/gold/order_metrics
+
+      GOLD_ORDER_STATUS_PATH: >-
+        /workspace/lakehouse/gold/order_status_distribution
+
+      GOLD_ORDER_METRICS_CHECKPOINT_PATH: >-
+        /workspace/lakehouse/checkpoints/gold_order_metrics
+
+      GOLD_ORDER_STATUS_CHECKPOINT_PATH: >-
+        /workspace/lakehouse/checkpoints/gold_order_status_distribution
+
+      GOLD_WATERMARK_DELAY: 1 day
+      GOLD_WINDOW_DURATION: 1 hour
+
+    volumes:
+      - ./spark:/workspace/spark:ro
+      - ./lakehouse:/workspace/lakehouse
+      - spark_ivy_cache:/tmp/.ivy2
+
+    depends_on:
+      spark-silver:
+        condition: service_started
+
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  spark_ivy_cache:

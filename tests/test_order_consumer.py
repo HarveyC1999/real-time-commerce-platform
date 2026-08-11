@@ -211,23 +211,49 @@ def test_process_next_returns_false_without_message(
     assert consumer.process_next() is False
 
 
-def test_process_next_rejects_empty_value(
+def test_process_next_skips_and_commits_empty_value(
     settings: Settings,
 ) -> None:
+    message = FakeMessage(value=None)
     fake_consumer = FakeConsumer(
-        FakeMessage(value=None)
+        message
     )
+    repository = FakeRepository()
 
     consumer = OrderEventConsumer(
         settings=settings,
         consumer=fake_consumer,
-        repository=FakeRepository(),
+        repository=repository,
     )
 
-    with pytest.raises(
-        ValueError,
-        match="cannot be empty",
-    ):
-        consumer.process_next()
+    assert consumer.process_next() is True
+    assert repository.events == []
+    assert fake_consumer.commits == [
+        {
+            "message": message,
+            "asynchronous": False,
+        }
+    ]
 
-    assert fake_consumer.commits == []
+
+def test_process_next_skips_and_commits_invalid_event(
+    settings: Settings,
+) -> None:
+    message = FakeMessage(value=b"this-is-not-json")
+    fake_consumer = FakeConsumer(message)
+    repository = FakeRepository()
+
+    consumer = OrderEventConsumer(
+        settings=settings,
+        consumer=fake_consumer,
+        repository=repository,
+    )
+
+    assert consumer.process_next() is True
+    assert repository.events == []
+    assert fake_consumer.commits == [
+        {
+            "message": message,
+            "asynchronous": False,
+        }
+    ]

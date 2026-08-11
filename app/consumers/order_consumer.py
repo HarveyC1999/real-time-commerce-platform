@@ -4,6 +4,7 @@ import logging
 from typing import Protocol
 
 from confluent_kafka import Consumer, KafkaError, Message
+from pydantic import ValidationError
 
 from app.config import Settings, get_settings
 from app.models.order_event import OrderEvent
@@ -105,13 +106,43 @@ class OrderEventConsumer:
         raw_value = message.value()
 
         if raw_value is None:
-            raise ValueError(
-                "Kafka message value cannot be empty."
+            logger.warning(
+                (
+                    "Empty Kafka message skipped: "
+                    "partition=%s offset=%s"
+                ),
+                message.partition(),
+                message.offset(),
             )
 
-        event = OrderEvent.model_validate_json(
-            raw_value
-        )
+            self._consumer.commit(
+                message=message,
+                asynchronous=False,
+            )
+
+            return True
+
+        try:
+            event = OrderEvent.model_validate_json(
+                raw_value
+            )
+        except ValidationError as error:
+            logger.warning(
+                (
+                    "Invalid order event skipped: "
+                    "partition=%s offset=%s error=%s"
+                ),
+                message.partition(),
+                message.offset(),
+                error,
+            )
+
+            self._consumer.commit(
+                message=message,
+                asynchronous=False,
+            )
+
+            return True
 
         inserted = self._repository.insert(
             event

@@ -12,8 +12,19 @@ htmlcov/
 .idea/
 .vscode/
 
-tests/
 data/
 logs/
 
 .DS_Store
+
+lakehouse/bronze/
+lakehouse/silver/
+lakehouse/gold/
+lakehouse/checkpoints/
+lakehouse/quarantine/
+
+!lakehouse/bronze/.gitkeep
+!lakehouse/silver/.gitkeep
+!lakehouse/gold/.gitkeep
+!lakehouse/checkpoints/.gitkeep
+!lakehouse/quarantine/.gitkeep

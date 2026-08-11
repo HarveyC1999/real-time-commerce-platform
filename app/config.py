@@ -30,3 +30,15 @@ def get_settings() -> Settings:
     """Return the cached application settings."""
 
     return Settings()
+
+
+def postgres_connection_string(settings: Settings) -> str:
+    """Build a psycopg connection string from application settings."""
+
+    return (
+        f"host={settings.postgres_host} "
+        f"port={settings.postgres_port} "
+        f"dbname={settings.postgres_database} "
+        f"user={settings.postgres_user} "
+        f"password={settings.postgres_password}"
+    )

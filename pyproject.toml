@@ -16,6 +16,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+analytics = [
+    "pyarrow>=18",
+]
 dev = [
     "pytest",
     "pytest-cov",
@@ -34,6 +37,9 @@ exclude = [
 pythonpath = ["."]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+markers = [
+    "integration: tests requiring Docker infrastructure",
+]
 
 [tool.ruff]
 line-length = 88

@@ -5,7 +5,11 @@ from typing import Protocol
 
 import psycopg
 
-from app.config import Settings, get_settings
+from app.config import (
+    Settings,
+    get_settings,
+    postgres_connection_string,
+)
 from app.models.order_event import OrderEvent
 
 INSERT_ORDER_EVENT_SQL = """
@@ -82,7 +86,9 @@ class OrderEventRepository:
         connection = (
             self._connection
             or psycopg.connect(
-                self._connection_string()
+                postgres_connection_string(
+                    self.settings
+                )
             )
         )
 
@@ -122,12 +128,3 @@ class OrderEventRepository:
         finally:
             if owns_connection:
                 connection.close()
-
-    def _connection_string(self) -> str:
-        return (
-            f"host={self.settings.postgres_host} "
-            f"port={self.settings.postgres_port} "
-            f"dbname={self.settings.postgres_database} "
-            f"user={self.settings.postgres_user} "
-            f"password={self.settings.postgres_password}"
-        )
