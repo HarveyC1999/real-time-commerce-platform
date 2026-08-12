@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -109,3 +110,111 @@ def test_create_batch_rejects_invalid_count() -> None:
         match="greater than zero",
     ):
         factory.create_batch(0)
+
+
+def test_completed_lifecycle_preserves_order_identity() -> None:
+    factory = OrderEventFactory(seed=42)
+    start_time = datetime(
+        2026,
+        8,
+        12,
+        8,
+        tzinfo=UTC,
+    )
+
+    events = factory.create_lifecycle(
+        start_time=start_time,
+        cancelled=False,
+    )
+
+    assert [
+        event.order_status
+        for event in events
+    ] == [
+        OrderStatus.PENDING,
+        OrderStatus.PAID,
+        OrderStatus.PROCESSING,
+        OrderStatus.COMPLETED,
+    ]
+    assert [
+        event.event_type
+        for event in events
+    ] == [
+        OrderEventType.ORDER_CREATED,
+        OrderEventType.ORDER_UPDATED,
+        OrderEventType.ORDER_UPDATED,
+        OrderEventType.ORDER_COMPLETED,
+    ]
+    assert len(
+        {
+            event.order_id
+            for event in events
+        }
+    ) == 1
+    assert len(
+        {
+            event.customer_id
+            for event in events
+        }
+    ) == 1
+    assert len(
+        {
+            event.order_amount
+            for event in events
+        }
+    ) == 1
+    assert len(
+        {
+            event.message_key()
+            for event in events
+        }
+    ) == 1
+    assert [
+        event.event_time
+        for event in events
+    ] == sorted(
+        event.event_time
+        for event in events
+    )
+
+
+def test_cancelled_lifecycle_stops_after_cancellation() -> None:
+    factory = OrderEventFactory(seed=42)
+
+    events = factory.create_lifecycle(
+        cancelled=True
+    )
+
+    assert [
+        event.order_status
+        for event in events
+    ] == [
+        OrderStatus.PENDING,
+        OrderStatus.CANCELLED,
+    ]
+    assert events[-1].event_type == (
+        OrderEventType.ORDER_CANCELLED
+    )
+
+
+def test_create_lifecycles_returns_distinct_orders() -> None:
+    factory = OrderEventFactory(seed=42)
+
+    events = factory.create_lifecycles(5)
+
+    assert len(
+        {
+            event.order_id
+            for event in events
+        }
+    ) == 5
+
+
+def test_create_lifecycles_rejects_invalid_count() -> None:
+    factory = OrderEventFactory(seed=42)
+
+    with pytest.raises(
+        ValueError,
+        match="greater than zero",
+    ):
+        factory.create_lifecycles(0)

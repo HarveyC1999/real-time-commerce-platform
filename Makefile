@@ -24,7 +24,7 @@ migrate:
 	$(PYTHON) scripts/apply_migrations.py
 
 demo:
-	$(PYTHON) scripts/produce_orders.py --count 100 --seed 42
+	$(PYTHON) scripts/produce_orders.py --orders 25 --seed 42
 
 test:
 	$(PYTHON) -m pytest -m 'not integration' -q

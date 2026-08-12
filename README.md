@@ -72,8 +72,13 @@ docker compose ps
 Publish sample events:
 
 ```bash
-.venv/bin/python scripts/produce_orders.py --count 100 --seed 42
+.venv/bin/python scripts/produce_orders.py --orders 25 --seed 42
 ```
+
+This publishes ordered events for each generated order. Most orders progress
+from `pending` through `paid` and `processing` to `completed`; a smaller share
+ends at `cancelled`. Use `--count 100` when independent random events are more
+useful for a quick load test.
 
 On Windows PowerShell, use `.venv\Scripts\python.exe` in place of
 `.venv/bin/python`; the Docker Compose commands are unchanged.

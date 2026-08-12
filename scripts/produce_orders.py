@@ -11,18 +11,35 @@ from app.services.order_event_factory import (
 )
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(
+    argv: list[str] | None = None,
+) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Publish generated commerce order events."
         )
     )
 
-    parser.add_argument(
+    generation_mode = (
+        parser.add_mutually_exclusive_group()
+    )
+
+    generation_mode.add_argument(
         "--count",
         type=int,
-        default=100,
-        help="Number of events to publish.",
+        help=(
+            "Number of independent events to publish "
+            "(default: 100)."
+        ),
+    )
+
+    generation_mode.add_argument(
+        "--orders",
+        type=int,
+        help=(
+            "Number of realistic order lifecycles "
+            "to publish."
+        ),
     )
 
     parser.add_argument(
@@ -35,7 +52,7 @@ def parse_args() -> argparse.Namespace:
         ),
     )
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def main() -> None:
@@ -53,9 +70,25 @@ def main() -> None:
         seed=args.seed
     )
 
-    events = factory.create_batch(
-        args.count
-    )
+    if args.orders is not None:
+        events = factory.create_lifecycles(
+            args.orders
+        )
+        description = (
+            f"{args.orders} order lifecycle(s)"
+        )
+    else:
+        event_count = (
+            args.count
+            if args.count is not None
+            else 100
+        )
+        events = factory.create_batch(
+            event_count
+        )
+        description = (
+            f"{event_count} independent event(s)"
+        )
 
     producer = OrderEventProducer()
 
@@ -66,7 +99,8 @@ def main() -> None:
         producer.close()
 
     print(
-        f"Published {len(events)} order events."
+        f"Published {len(events)} event(s) for "
+        f"{description}."
     )
 
 
