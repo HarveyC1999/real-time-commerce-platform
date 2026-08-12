@@ -1,0 +1,17 @@
+FROM apache/airflow:3.3.0-python3.14
+
+USER airflow
+
+WORKDIR /opt/commerce
+
+COPY --chown=airflow:root pyproject.toml ./
+COPY --chown=airflow:root app ./app
+COPY --chown=airflow:root scripts ./scripts
+COPY --chown=airflow:root dbt ./dbt
+COPY --chown=airflow:root airflow ./airflow
+
+RUN python -m pip install --no-cache-dir \
+    "apache-airflow==3.3.0" \
+    ".[analytics,dbt]"
+
+ENV PYTHONPATH=/opt/commerce

@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_order_metrics_hourly
+    description: Typed hourly commerce metrics from the Gold PostgreSQL sink.
+    columns:
+      - name: window_start
+        data_tests:
+          - not_null
+      - name: currency
+        data_tests:
+          - not_null
+
+  - name: stg_order_status_hourly
+    description: Hourly lifecycle event counts by order status.
+    columns:
+      - name: window_start
+        data_tests:
+          - not_null
+      - name: currency
+        data_tests:
+          - not_null
+      - name: order_status
+        data_tests:
+          - not_null

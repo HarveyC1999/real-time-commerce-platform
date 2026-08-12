@@ -19,6 +19,9 @@ dependencies = [
 analytics = [
     "pyarrow>=18",
 ]
+dbt = [
+    "dbt-postgres>=1.10,<2",
+]
 dev = [
     "pytest",
     "pytest-cov",

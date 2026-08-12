@@ -1,0 +1,15 @@
+.git
+.venv
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+.env
+
+lakehouse
+dbt/logs
+dbt/target
+dbt_packages
+airflow/logs
+airflow/*.db
+airflow/*.json.generated

@@ -202,6 +202,39 @@ services:
 
     restart: unless-stopped
 
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: commerce-airflow
+    command: standalone
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/commerce/airflow/dags
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__PARALLELISM: "2"
+
+      GOLD_ORDER_METRICS_PATH: /opt/commerce/lakehouse/gold/order_metrics
+      GOLD_ORDER_STATUS_PATH: >-
+        /opt/commerce/lakehouse/gold/order_status_distribution
+
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: commerce
+      POSTGRES_USER: commerce
+      POSTGRES_PASSWORD: commerce
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./lakehouse:/opt/commerce/lakehouse:ro
+      - airflow_data:/opt/airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   spark_ivy_cache:
+  airflow_data:

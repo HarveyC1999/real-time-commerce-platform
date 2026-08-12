@@ -16,6 +16,15 @@ htmlcov/
 data/
 logs/
 
+dbt/logs/
+dbt/target/
+dbt_packages/
+dbt/.user.yml
+
+airflow/logs/
+airflow/*.db
+airflow/*.json.generated
+
 .DS_Store
 
 lakehouse/bronze/

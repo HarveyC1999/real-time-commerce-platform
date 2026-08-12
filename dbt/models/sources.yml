@@ -1,0 +1,49 @@
+version: 2
+
+sources:
+  - name: analytics
+    description: Finalized Gold aggregates loaded idempotently into PostgreSQL.
+    schema: analytics
+    tables:
+      - name: order_metrics_hourly
+        description: One row per finalized event-time window and currency.
+        columns:
+          - name: window_start
+            data_tests:
+              - not_null
+          - name: window_end
+            data_tests:
+              - not_null
+          - name: currency
+            data_tests:
+              - not_null
+          - name: order_event_count
+            data_tests:
+              - not_null
+          - name: revenue
+            data_tests:
+              - not_null
+
+      - name: order_status_hourly
+        description: Event counts by finalized window, currency, and status.
+        columns:
+          - name: window_start
+            data_tests:
+              - not_null
+          - name: currency
+            data_tests:
+              - not_null
+          - name: order_status
+            data_tests:
+              - not_null
+              - accepted_values:
+                  arguments:
+                    values:
+                      - pending
+                      - paid
+                      - processing
+                      - completed
+                      - cancelled
+          - name: status_event_count
+            data_tests:
+              - not_null
